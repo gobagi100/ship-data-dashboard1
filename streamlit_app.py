@@ -33,16 +33,29 @@ st.markdown("""
     padding-right: 0rem;
 }
 
+/* KPI 카드 스타일 */
 [data-testid="stMetric"] {
-    background-color: #393939;
+    background-color: #f5f5f5;  /* 밝은 회색 배경 */
+    color: #000000;             /* 검은 텍스트 */
     text-align: center;
     padding: 15px 0;
+    border-radius: 8px;         /* 둥근 모서리 */
+    border: 1px solid #ddd;     /* 연한 테두리 */
+    margin-bottom: 10px;
 }
 
 [data-testid="stMetricLabel"] {
   display: flex;
   justify-content: center;
   align-items: center;
+  font-weight: bold;
+  color: #333333;
+}
+
+[data-testid="stMetricValue"] {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #000000;
 }
 
 </style>
@@ -166,7 +179,6 @@ with col[0]:
 with col[1]:
     st.markdown("### 🌍 지역별 해양사고 분석")
 
-    # 밀집도 지도 (OpenStreetMap)
     fig_map = px.density_mapbox(
         df_f,
         lat="lat", lon="lon",
@@ -179,7 +191,6 @@ with col[1]:
     )
     st.plotly_chart(fig_map, use_container_width=True)
 
-    # 관할 해경서별
     coast_count = df_f[COL_COAST].value_counts().reset_index()
     coast_count.columns = ["관할해경서", "사고건수"]
     chart_coast = alt.Chart(coast_count).mark_bar().encode(
@@ -190,7 +201,6 @@ with col[1]:
     ).properties(height=350)
     st.altair_chart(chart_coast, use_container_width=True)
 
-    # 발생 해역별
     area_count = df_f[COL_AREA].value_counts().reset_index()
     area_count.columns = ["발생해역", "사고건수"]
     fig_area = px.bar(
@@ -200,11 +210,9 @@ with col[1]:
     st.plotly_chart(fig_area, use_container_width=True)
 
 # ---- col[2] : 사고유형 / 원인 분석 ----
-# ---- col[2] : 사고유형 / 원인 분석 ----
 with col[2]:
     st.markdown("### ⚠️ 사고유형 및 원인 분석")
 
-    # ---- 사고유형 파이차트 ----
     type_count = df_f[COL_TYPE].value_counts().reset_index()
     type_count.columns = ["발생유형", "사고건수"]
     fig_type = px.pie(type_count, names="발생유형", values="사고건수", hole=0.4,
@@ -212,14 +220,12 @@ with col[2]:
     fig_type.update_traces(textinfo="percent+label")
     st.plotly_chart(fig_type, use_container_width=True)
 
-    # ---- 발생원인 트리맵 ----
     cause_count = df_f[COL_CAUSE].value_counts().reset_index()
     cause_count.columns = ["발생원인", "사고건수"]
     fig_cause = px.treemap(cause_count, path=["발생원인"], values="사고건수",
                            color="사고건수", color_continuous_scale="Blues")
     st.plotly_chart(fig_cause, use_container_width=True)
 
-    # ---- 선종별 사고 건수 ----
     ship_count = df_f[COL_SHIP].value_counts().reset_index()
     ship_count.columns = ["선 종", "사고건수"]
     chart_ship = alt.Chart(ship_count).mark_bar().encode(
@@ -230,15 +236,12 @@ with col[2]:
     )
     st.altair_chart(chart_ship, use_container_width=True)
 
-    # =============================
-    # 충돌 / 전복 사고 집중 분석
-    # =============================
+    # ---- 충돌 / 전복 사고 집중 분석 ----
     st.markdown("### 🔍 충돌·전복 사고 인사이트")
 
     df_focus = df_f[df_f[COL_TYPE].isin(["충돌", "전복"])]
 
     if len(df_focus) > 0:
-        # 1) 원인별 분포
         focus_cause = df_focus[COL_CAUSE].value_counts().reset_index()
         focus_cause.columns = ["발생원인", "사고건수"]
 
@@ -248,19 +251,15 @@ with col[2]:
             color=alt.Color("사고건수:Q", scale=alt.Scale(scheme="oranges")),
             tooltip=["발생원인", "사고건수"]
         ).properties(height=250, title="충돌·전복 사고 원인별 분포")
-
         st.altair_chart(chart_focus_cause, use_container_width=True)
 
-        # 2) 월별 추세
         focus_month = df_focus.groupby([COL_MONTH, COL_TYPE]).size().reset_index(name="사고건수")
-
         chart_focus_month = alt.Chart(focus_month).mark_line(point=True).encode(
             x=alt.X(COL_MONTH, title="월"),
             y=alt.Y("사고건수", title="사고 건수"),
             color=alt.Color(COL_TYPE, title="사고유형"),
             tooltip=[COL_MONTH, COL_TYPE, "사고건수"]
         ).properties(height=250, title="충돌·전복 사고 월별 추세")
-
         st.altair_chart(chart_focus_month, use_container_width=True)
     else:
-        st.info("현재 선택된 조건에서 충돌·전복 사고 데이터가 없습니다.")
+        st.info("현재 조건에서는 충돌·전복 사고 데이터가 없습니다.")
