@@ -97,7 +97,7 @@ df[COL_DATE] = pd.to_datetime(df[COL_DATE], errors="coerce")
 #######################
 # Sidebar
 with st.sidebar:
-    st.title("🚢 해양사고 대시보드")
+    st.title("🚢 2024년 해양사고 대시보드")
     st.caption("필터를 적용하면 전체 차트가 연동됩니다.")
 
     # ---- Date range filter ----
